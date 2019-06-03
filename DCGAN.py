@@ -23,6 +23,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from IPython.display import HTML
+
 # Set random seem for reproducibility
 manualSeed = 999
 #manualSeed = random.randint(1, 10000) # use if you want new results
@@ -30,9 +31,8 @@ print("Random Seed: ", manualSeed)
 random.seed(manualSeed)
 torch.manual_seed(manualSeed)
 
-
 # Root directory for dataset
-dataroot = "data/celeba"
+dataroot = "../dataset/Data/cleaned_normalized/"
 # Number of workers for dataloader
 workers = 2
 # Batch size during training
@@ -40,8 +40,8 @@ batch_size = 128
 # Spatial size of training images. All images will be resized to this
 #   size using a transformer.
 image_size = 64
-# Number of channels in the training images. For color images this is 3
-nc = 3
+# Number of channels in the training data.
+nc = 1
 # Size of z latent vector (i.e. size of generator input)
 nz = 100
 # Size of feature maps in generator
@@ -58,6 +58,52 @@ beta1 = 0.5
 ngpu = 1
 
 #Load the data
-data = pd.read_csv("../Data/all_recorded_data.csv")
+data = pd.read_csv(dataroot + "autonomous.csv", index_col=False)
 print(data.shape)
 print(data.columns)
+
+"""
+Initially we will consider only the position of the robot
+robot_x robot_y robot_theta
+"""
+data_cols = list(data.columns[3:6])
+#Autonomous behavior visualization
+plt.plot(data.loc[0:10, 'robot_x'], data.loc[0:10,'robot_y'])
+
+# weights initialization
+# further used in the generator and discriminator
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
+
+class Discriminator(nn.Module):
+    def __init__(self, ngpu):
+        super(Discriminator, self).__init__()
+        self.ngpu = ngpu
+        self.main = nn.Sequential(
+            # input is (nc=1) x 10 x 3
+            nn.Conv2d(nc, ndf, 3, 2, 1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf) x 32 x 32
+            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*2) x 16 x 16
+            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*4) x 8 x 8
+            nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(ndf * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*8) x 4 x 4
+            nn.Conv2d(ndf * 8, 1, 4, 1, 0, bias=False),
+            nn.Sigmoid()
+        )
+def forward(self, input):
+        return self.main(input)
