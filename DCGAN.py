@@ -15,6 +15,7 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 import torch.utils.data
+from torch.utils.data import Dataset, DataLoader
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
@@ -32,7 +33,7 @@ random.seed(manualSeed)
 torch.manual_seed(manualSeed)
 
 # Root directory for dataset
-dataroot = "../dataset/Data/cleaned_normalized/"
+dataroot = "../dataset/Data/autonomous_cleaned_normalized/"
 # Number of workers for dataloader
 workers = 2
 # Batch size during training
@@ -57,18 +58,25 @@ beta1 = 0.5
 # Number of GPUs available. Use 0 for CPU mode.
 ngpu = 1
 
-#Load the data
-data = pd.read_csv(dataroot + "autonomous.csv", index_col=False)
-print(data.shape)
-print(data.columns)
+
 
 """
-Initially we will consider only the position of the robot
-robot_x robot_y robot_theta
+Create the appropriate dataset class format for our problem
+
 """
-data_cols = list(data.columns[3:6])
-#Autonomous behavior visualization
-plt.plot(data.loc[0:10, 'robot_x'], data.loc[0:10,'robot_y'])
+#should we have the header removed?
+def get_data(dataroot):
+    df = pd.read_csv(dataroot)
+    return df.as_matrix()
+
+data_sets = datasets.DatasetFolder(dataroot, 
+                                   loader=get_data, extensions=['.csv'])
+train_loader = torch.utils.data.DataLoader(data_sets,
+                                          batch_size,
+                                          shuffle=False,
+                                          workers)
+
+
 
 # weights initialization
 # further used in the generator and discriminator
