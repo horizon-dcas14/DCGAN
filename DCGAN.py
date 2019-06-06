@@ -71,12 +71,13 @@ def get_data(dataroot):
 
 data_sets = datasets.DatasetFolder(dataroot, 
                                    loader=get_data, extensions=['.csv'])
-train_loader = torch.utils.data.DataLoader(data_sets,
+dataloader = torch.utils.data.DataLoader(data_sets,
                                           batch_size,
                                           shuffle=False,
                                           workers)
 
-
+# Decide which device we want to run on
+device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
 
 # weights initialization
 # further used in the generator and discriminator
@@ -88,7 +89,7 @@ def weights_init(m):
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
 
-
+# Discriminator architecture
 class Discriminator(nn.Module):
     def __init__(self, ngpu):
         super(Discriminator, self).__init__()
