@@ -48,7 +48,7 @@ nz = 100
 # Size of feature maps in generator
 ngf = 64
 # Size of feature maps in discriminator
-ndf = 64
+ndf = 10
 # Number of training epochs
 num_epochs = 5
 # Learning rate for optimizers
@@ -96,7 +96,7 @@ class Discriminator(nn.Module):
         self.ngpu = ngpu
         self.main = nn.Sequential(
             # input is (nc=1) x 10 x 3
-            nn.Conv2d(nc, ndf, 3, 2, 1, bias=False),
+            nn.Conv2d(nc, ndf, 3, 1, 0, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf) x 32 x 32
             nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
